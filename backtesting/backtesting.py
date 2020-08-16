@@ -531,7 +531,7 @@ class Trade:
         """Place new `Order` to close `portion` of the trade at next market price."""
         assert 0 < portion <= 1, "portion must be a fraction between 0 and 1"
         # TODO: check this insert
-        self.__broker.orders.insert(0, Order(self.__broker, -round(self.size * portion),
+        self.__broker.orders.insert(0, Order(self.__broker, -(self.size * portion),
                                              parent_trade=self))
 
     # Fields getters
@@ -830,7 +830,8 @@ class _Broker:
                     assert order not in self.orders  # Removed when trade was closed
                 else:
                     # It's a trade.close() order, now done
-                    assert abs(trade.size) >= abs(order.size) >= 1
+                    # assert abs(trade.size) >= abs(order.size) >= 1
+                    assert abs(trade.size) >= abs(order.size)
                     self.orders.remove(order)
                 continue
 
@@ -843,15 +844,16 @@ class _Broker:
             # If order size was specified proportionally,
             # precompute true size in units, accounting for margin and spread/commissions
             size = order.size
-            if -1 < size < 1:
-                size = np.sign(size) * int((self.margin_available * self._leverage * abs(size))
-                                           // adjusted_price)
-                # Not enough cash/margin even for a single unit
-                if not size:
-                    self.orders.remove(order)
-                    continue
-            assert size == round(size)
-            need_size = int(size)
+            # if -1 < size < 1:
+            #     size = np.sign(size) * int((self.margin_available * self._leverage * abs(size))
+            #                                // adjusted_price)
+            #     # Not enough cash/margin even for a single unit
+            #     if not size:
+            #         self.orders.remove(order)
+            #         continue
+            # assert size == round(size)
+            # need_size = int(size)
+            need_size = size
 
             if not self._hedging:
                 # Fill position by FIFO closing/reducing existing opposite-facing trades.
